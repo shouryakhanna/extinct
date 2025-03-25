@@ -212,6 +212,7 @@ class lallement_maps(object):
 		self.getlist()		
 		self.useprecomp = useprecomp
 		self.hplevel = 7 # pre computed map
+		self.Rv = 3.1 #default option
 	
 	def getlist(self):
 		'''
@@ -359,9 +360,9 @@ class lallement_maps(object):
 
 		
 		if getlos:			
-			return d_kpc, A0(d) 
+			return d_kpc, A0(d), E(B-V)(d) = A0(d)/self.Rv
 		if getlos == False:
-			return A0(d_kpc)
+			return A0(d_kpc), E(B-V)/self.Rv
 			
 		'''
 		
@@ -390,9 +391,9 @@ class lallement_maps(object):
 			indbox = np.where((abs(dmock['x1'] - self.xSun )<self.xmax/2.)&(abs(dmock['y1']- self.ySun/2. )<self.ymax)&(abs(dmock['z1'] - self.zSun )<self.zmax))[0]
 		
 			if getlos:
-				return self.dgrid[indbox]/1000.,A0_[indbox]
+				return self.dgrid[indbox]/1000.,A0_[indbox], A0_[indbox]/self.Rv
 			if getlos == False and ((duse*1000.) < np.nanmax(self.dgrid[indbox])) :				
-				return A0_[int(f(duse))] #*self.grid_step
+				return A0_[int(f(duse))], A0_[int(f(duse))]/self.Rv  #*self.grid_step
 			if getlos == False and ((duse*1000.) > np.nanmax(self.dgrid[indbox])) :				
 				return np.nan
 
@@ -402,25 +403,16 @@ class lallement_maps(object):
 			ipix = hp.ang2pix(self.hpinfo['nside'],l,b,lonlat=True)
 			indl,indr,indnm = tabpy.crossmatch(ipix,self.fl_pre['hpix_id'])	
 			a0val_tmp = self.a0map[indr,dindx]			
-			
-			print(a0val_tmp)
-			# testing...
-			
+		
 			a0val = np.zeros(duse.size) + np.nan 
-			print(a0val_tmp)
-			print(l.size)
-			print(b.size)
-			print(duse.size)
 			dmock = {}	
 			dmock['x1'],dmock['y1'],dmock['z1'] = autil.lbr2xyz(l,b,duse)			 
 			indbox = np.where((abs(dmock['x1']*1000. - self.xSun )<self.xmax/2.)&(abs(dmock['y1']*1000. - self.ySun/2. )<self.ymax)&(abs(dmock['z1']*1000. - self.zSun )<self.zmax))[0]					
 			
-			# return indbox, a0val, a0val_tmp 
-			# print(indbox)
-			# print(indbox.size)
+
 			a0val[indbox] = a0val_tmp[indbox].copy()
 
-			return a0val
+			return a0val, a0val/self.Rv
 			
 
 
@@ -477,7 +469,10 @@ class extmap():
 		
 		import mwdust
 		print('imported mwdust..')
-		self.lmap = Lalmap(dustmaploc=self.dustmaploc)
+
+		lmap = lallement_maps(dustmaploc=self.dustmaploc,useprecomp=True); 		
+		lmap.setup('vergely2022',resol='25pc')
+		self.lmap = lmap
 
 		if self.load_bstar:
 			print('load_bstar = '+str(self.load_bstar))
@@ -580,7 +575,7 @@ class extmap():
 
 			iproc = 0
 			
-			ebv = self.lmap.getebv(l,b,d)
+			A0,ebv = self.llm.getvals(l,b,duse=d)
 			indf = np.where(np.isfinite(ebv))[0]
 			indnan = np.where(np.isnan(ebv))[0]
 			if indnan.size > 0:
