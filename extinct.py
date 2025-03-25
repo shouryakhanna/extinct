@@ -200,7 +200,7 @@ class lallement_maps(object):
 	llm.setup(maplists[inum],resol=dresols[inum])
 
 	precomputed maps (at healpix level 7)
-
+	
 	
 	'''	
 	def __init__(self,dustmaploc='',useprecomp=False):
@@ -402,7 +402,11 @@ class lallement_maps(object):
 			dindx = (duse/self.dres).astype(int)
 			ipix = hp.ang2pix(self.hpinfo['nside'],l,b,lonlat=True)
 			indl,indr,indnm = tabpy.crossmatch(ipix,self.fl_pre['hpix_id'])	
-			a0val_tmp = self.a0map[indr,dindx]			
+			# fixing...
+			indl1,indr1,indnm1=tabpy.crossmatch(self.fl_pre['hpix_id'][indr],ipix)
+			a0val_tmp = self.a0map[indl1,dindx]			
+		
+
 		
 			a0val = np.zeros(duse.size) + np.nan 
 			dmock = {}	
