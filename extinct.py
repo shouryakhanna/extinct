@@ -341,8 +341,8 @@ class lallement_maps(object):
 			self.fl_pre = dtools.pickleread(self.dustmaploc+'/'+self.mapuse+'/intp_'+self.mapuse+'_'+self.resol+'.pkl')		
 			self.dres = (float(self.resol.split('pc')[0])/5.)/1000.
 		
-			dmax_guess = 15.	
-			self.dgrid_pre = np.linspace(0.,dmax_guess,int(dmax_guess/self.dres))
+			self.dmax_guess = 105.	
+			self.dgrid_pre = np.linspace(0.,self.dmax_guess,int(self.dmax_guess/self.dres))
 			
 			self.a0map = np.array([self.fl_pre['func'][i](self.dgrid_pre) for i in range(self.fl_pre['func'].size)])		
 
@@ -401,12 +401,14 @@ class lallement_maps(object):
 
 			dindx = (duse/self.dres).astype(int)
 			ipix = hp.ang2pix(self.hpinfo['nside'],l,b,lonlat=True)
-			indl,indr,indnm = tabpy.crossmatch(ipix,self.fl_pre['hpix_id'])	
-			# fixing...
-			indl1,indr1,indnm1=tabpy.crossmatch(self.fl_pre['hpix_id'][indr],ipix)
-			a0val_tmp = self.a0map[indl1,dindx]			
+			
+
+			indl,indr,indnm = tabpy.crossmatch(self.fl_pre['hpix_id'],ipix)
+			a0val_tmp = self.a0map[indl,dindx]			
 		
 
+			self.ipix = ipix
+			self.dindx = dindx
 		
 			a0val = np.zeros(duse.size) + np.nan 
 			dmock = {}	
@@ -474,9 +476,9 @@ class extmap():
 		import mwdust
 		print('imported mwdust..')
 
-		lmap = lallement_maps(dustmaploc=self.dustmaploc,useprecomp=True); 		
-		lmap.setup('vergely2022',resol='25pc')
-		self.lmap = lmap
+		# lmap = lallement_maps(dustmaploc=self.dustmaploc,useprecomp=True); 		
+		# lmap.setup('vergely2022',resol='25pc')
+		self.lmap = 0 #lmap
 
 		if self.load_bstar:
 			print('load_bstar = '+str(self.load_bstar))
@@ -611,7 +613,7 @@ class extmap():
 
 				
 		if typ == 'lallement':					
-			ebv = self.lmap.getebv(l,b,d)			
+			ebv = self.lmap.getvals(l,b,d)			
 			return ebv
 			
 		if typ == 'sfd':					
