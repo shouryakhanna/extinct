@@ -476,9 +476,9 @@ class extmap():
 		import mwdust
 		print('imported mwdust..')
 
-		# lmap = lallement_maps(dustmaploc=self.dustmaploc,useprecomp=True); 		
-		# lmap.setup('vergely2022',resol='25pc')
-		self.lmap = 0 #lmap
+		lmap = lallement_maps(dustmaploc=self.dustmaploc,useprecomp=True); 		
+		lmap.setup('vergely2022',resol='25pc')
+		self.lmap = lmap
 
 		if self.load_bstar:
 			print('load_bstar = '+str(self.load_bstar))
